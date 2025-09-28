@@ -9,9 +9,9 @@ x_numericos = {'latitude': 0, 'longitude': 0, 'accommodates': 0, 'bathrooms': 0,
 
 x_tf = {'host_is_superhost': 0, 'instant_bookable': 0}
 
-x_listas = {'property_type': ['Apartment', 'Bed and breakfast', 'Condominium', 'Guest suite', 'Guesthouse', 'Hostel', 'House', 'Loft', 'Outros', 'Serviced apartment'],
+x_listas = {'property_type': ['Apartment', 'Bed and breakfast', 'Condominium', 'Guest suite', 'Guesthouse', 'Hostel', 'House', 'Loft', 'Other', 'Outros', 'Serviced apartment'],
             'room_type': ['Entire home/apt', 'Hotel room', 'Private room', 'Shared room'],
-            'cancelation_policy': ['flexible', 'moderate', 'strict', 'strict_14_with_grace_period']}
+            'cancellation_policy': ['flexible', 'moderate', 'strict', 'strict_14_with_grace_period']}
 
 
 dicionario = {}
@@ -23,8 +23,10 @@ for item in x_listas:
 for item in x_numericos:
     if item == 'latitude' or item == 'longitude':
         valor = st.number_input(f'{item}', step=0.00001, value=0.0, format="%.5f")
+        x_numericos[item] = valor
     elif item == 'extra_people':
-        valor = st.number_input(f'{item}', step=0.01, value=0.0)    
+        valor = st.number_input(f'{item}', step=0.01, value=0.0)
+        x_numericos[item] = valor
     else:
         valor = st.number_input(f'{item}', step=1,  value=0)
         x_numericos[item] = valor
@@ -45,9 +47,14 @@ for item in x_listas:
 botao = st.button('Prever Valor do imóvel')
 
 if botao:
-    dicionario.update(x_valores)
+    dicionario.update(x_numericos)
     dicionario.update(x_tf)
-    valores_x = pd.DataFrame(dicionario, index=[0])
+    valores_x = pd.DataFrame(dicionario, index=[0]) #"Crie uma tabela com exatamente uma linha. Use as chaves do meu dicionário como os nomes das colunas e os valores como os dados para essa única linha. O 'nome' ou rótulo dessa linha será 0."
+
+    dados = pd.read_csv('dados.csv')
+    colunas = list(dados.columns)[1:-1] #pega todas as colunas, menos a primeira e a última
+
+    novo_df = valores_x[colunas] #reordena as colunas do novo dataframe para ficar igual ao do treino
     modelo = joblib.load('modelo.joblib')
-    preco = modelo.predict(valores_x)
-    st.write(f'O valor previsto do imóvel é de R$ {preco}')
+    preco = modelo.predict(novo_df)
+    st.write(f'O valor previsto do imóvel é de R$ {preco[0]:.2f}')
